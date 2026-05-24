@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELECTIONS 1994 — CBS News Election Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f5f4f0;--s1:#eeede9;--s2:#e6e5e1;--s3:#deded9;--s4:#d0cfc9;--s5:#c4c3bc;
+  --border:#dddcda;--border2:#c8c7c4;
+  --text:#111110;--t2:#4a4a48;--t3:#8a8a88;--t4:#b4b4b2;
+  --amber:#c47d00;--amber2:#a86800;--amber3:#7a4d00;
+  --dem:#1d52c7;--dem2:#1a44b8;--dem-dim:#b8c8f0;
+  --rep:#b91c1c;--rep2:#a31515;--rep-dim:#f0bfbf;
+  --sora:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sora);line-height:1.6;overflow-x:hidden}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:200;height:56px;background:rgba(245,244,240,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.hdr-logo{font-size:12px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap;color:var(--text)}
+.hdr-logo em{color:var(--amber);font-style:normal}
+.hdr-logo span{color:var(--t3);font-weight:400}
+.hdr-nav{flex:1;display:flex;justify-content:center;gap:28px;font-size:10.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--t3)}
+.hdr-nav a{color:inherit;text-decoration:none;cursor:pointer;padding-bottom:3px;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.hdr-nav a:hover{color:var(--text)}
+.hdr-nav a.active{color:var(--text);border-bottom-color:var(--amber)}
+
+/* CBS LOGO */
+.cbs-logo{display:flex;align-items:center;gap:8px;margin-right:4px}
+.cbs-logo-img{height:26px;width:auto;object-fit:contain;filter:grayscale(30%)}
+.cbs-wordmark{font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--t3)}
+
+/* VIEW PANELS */
+.view-panel{display:none;flex-direction:column;gap:18px;flex:1}
+.view-panel.active{display:flex}
+
+/* ===== HOME PAGE ===== */
+.home-hero{background:#fff;border:1px solid var(--border);border-radius:12px;padding:32px 36px;box-shadow:0 2px 12px rgba(0,0,0,.06);position:relative;overflow:hidden}
+.home-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--dem2) 0%,var(--dem2) 47%,var(--amber) 47%,var(--amber) 53%,var(--rep2) 53%,var(--rep2) 100%)}
+.hero-date{font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+.hero-title{font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--text);line-height:1;margin-bottom:4px}
+.hero-sub{font-size:13px;color:var(--t3);font-weight:400;margin-bottom:24px}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.hstat{border:1px solid var(--border);border-radius:8px;padding:16px;background:var(--s1)}
+.hstat-lbl{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.hstat-val{font-family:var(--mono);font-size:28px;font-weight:800;line-height:1;margin-bottom:2px}
+.hstat-val.d{color:var(--dem2)} .hstat-val.r{color:var(--rep2)} .hstat-val.a{color:var(--amber)}
+.hstat-note{font-size:10px;color:var(--t3)}
+
+.home-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.home-section-lbl{font-size:10px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.home-section-lbl::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--amber)}
+.home-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+
+/* Control cards */
+.ctrl-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.05);cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s}
+.ctrl-card:hover{border-color:var(--amber);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.09)}
+.ctrl-icon{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:10px}
+.ctrl-icon.d{background:rgba(29,68,184,.12);color:var(--dem2)}
+.ctrl-icon.r{background:rgba(163,21,21,.12);color:var(--rep2)}
+.ctrl-icon.a{background:rgba(196,125,0,.12);color:var(--amber)}
+.ctrl-body{display:flex;justify-content:space-between;align-items:flex-end}
+.ctrl-num{font-family:var(--mono);font-size:36px;font-weight:800;line-height:1}
+.ctrl-num.d{color:var(--dem2)} .ctrl-num.r{color:var(--rep2)} .ctrl-num.a{color:var(--amber)}
+.ctrl-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.ctrl-sub{font-size:10px;color:var(--t3)}
+.ctrl-bar{height:5px;border-radius:3px;background:var(--s3);overflow:hidden;margin-top:12px;display:flex}
+.ctrl-bar-d{background:var(--dem2);transition:width 1.5s ease}
+.ctrl-bar-r{background:var(--rep2);transition:width 1.5s ease}
+.ctrl-threshold{font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:4px;text-align:center}
+
+/* Key race summary */
+.krace-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background .2s;border-radius:4px}
+.krace-item:last-child{border-bottom:none}
+.krace-item:hover{background:var(--s1);padding-left:8px;padding-right:8px;margin:0 -8px}
+.kri-left{display:flex;flex-direction:column;gap:2px}
+.kri-state{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text)}
+.kri-type{font-size:9px;color:var(--t3);font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+.kri-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.kri-margin{font-family:var(--mono);font-size:12px;font-weight:700}
+.kri-rpt{font-family:var(--mono);font-size:10px;color:var(--t3)}
+
+/* Projection ticker */
+.proj-ticker{background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px 20px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.proj-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.proj-item:last-child{border-bottom:none}
+.proj-badge{font-size:9px;font-weight:800;letter-spacing:.14em;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.proj-badge.dem{background:rgba(29,68,184,.14);color:var(--dem2)}
+.proj-badge.rep{background:rgba(163,21,21,.14);color:var(--rep2)}
+.proj-badge.tup{background:rgba(196,125,0,.14);color:var(--amber)}
+.proj-text{font-size:11.5px;color:var(--t2);line-height:1.5}
+.proj-text strong{color:var(--text);font-weight:700}
+.proj-time{font-family:var(--mono);font-size:10px;color:var(--t4);margin-top:2px}
+
+/* ===== SENATE VIEW ===== */
+.senate-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.senate-race-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:border-color .2s,box-shadow .2s;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.senate-race-card:hover{border-color:var(--amber);box-shadow:0 4px 16px rgba(0,0,0,.09)}
+.src-state{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--text);margin-bottom:2px}
+.src-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.src-cands{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.src-cand{display:flex;flex-direction:column;gap:2px}
+.src-name{font-size:10px;color:var(--t2);font-weight:600}
+.src-pct{font-family:var(--mono);font-size:16px;font-weight:700}
+.src-pct.d{color:var(--dem2)} .src-pct.r{color:var(--rep2)}
+.src-bar{height:4px;border-radius:2px;background:var(--s4);overflow:hidden;display:flex;margin-bottom:8px}
+.src-bd{background:var(--dem2)} .src-br{background:var(--rep2)}
+.src-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--t3)}
+.src-lead{text-align:center;font-family:var(--mono);font-size:10px;color:var(--t2)}
+.src-lead b{color:var(--text);font-weight:700}
+
+.pres-national-map{width:100%;height:310px;background:var(--s2);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative;margin-bottom:6px}
+.pres-national-map svg{width:100%;height:100%}
+.pres-map-ld{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3)}
+.pres-map-legend{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:18px;font-family:var(--mono);font-size:9px;color:var(--t2)}
+.pml-item{display:flex;align-items:center;gap:5px}
+.pml-dot{width:10px;height:10px;border-radius:2px}
+
+/* PRESIDENT VIEW */
+.pres-ec{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}
+.pres-ec-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.pec-party{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px}
+.pec-party.d{color:var(--dem2)} .pec-party.r{color:var(--rep2)}
+.pec-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pec-ev{font-family:var(--mono);font-size:40px;font-weight:800;line-height:1}
+.pec-ev.d{color:var(--dem2)} .pec-ev.r{color:var(--rep2)}
+.pec-sub{font-size:9px;color:var(--t3);margin-top:4px;font-family:var(--mono)}
+.pres-ec-bar{height:12px;border-radius:6px;background:var(--s4);overflow:hidden;display:flex;margin-bottom:5px}
+.pres-ec-bar-d{background:var(--dem2);transition:width 1.5s ease}
+.pres-ec-bar-r{background:var(--rep2);transition:width 1.5s ease}
+.pres-threshold{display:flex;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:16px}
+.pres-states-lbl{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--t2);margin-bottom:12px}
+.pres-states-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hdr-right{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--t2)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#d4900a;animation:blink 2.4s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.live-lbl{color:var(--amber);font-weight:700;letter-spacing:.12em;font-size:11px}
+#clk{font-variant-numeric:tabular-nums}
+
+/* DIMMER */
+.dimmer-btn{background:none;border:1px solid var(--border2);color:var(--t2);cursor:pointer;font-family:var(--sora);font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;border-radius:4px;transition:all .2s;margin-left:4px}
+.dimmer-btn:hover{color:var(--text);border-color:var(--t3)}
+.screen-dimmer{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0);pointer-events:none;transition:background .4s ease}
+.screen-dimmer.active{background:rgba(0,0,0,.45);pointer-events:none}
+
+/* AMBER RULE */
+.aline{height:1px;background:linear-gradient(90deg,transparent 0%,var(--amber3) 25%,var(--amber3) 75%,transparent 100%);opacity:.4}
+
+/* RACE CALL BANNER */
+.banner{position:fixed;top:52px;left:0;right:0;z-index:300;height:0;overflow:hidden;background:var(--amber);display:flex;align-items:center;justify-content:center;gap:20px;transition:height .45s cubic-bezier(.4,0,.2,1)}
+.banner.show{height:42px}
+.banner-eyebrow{font-size:10px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(0,0,0,.55)}
+.banner-name{font-size:13px;font-weight:800;letter-spacing:.06em;color:#000}
+.banner-close{position:absolute;right:20px;background:none;border:none;cursor:pointer;color:rgba(0,0,0,.4);font-size:20px;line-height:1;transition:color .2s}
+.banner-close:hover{color:#000}
+
+/* TOOLTIP */
+.tip{position:fixed;z-index:500;background:#fff;border:1px solid var(--border2);border-radius:8px;padding:14px 16px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;min-width:192px;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.tip.on{opacity:1;transform:translateY(0)}
+.tip-name{font-size:12px;font-weight:700;margin-bottom:10px;letter-spacing:.04em;color:var(--text)}
+.tip-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px}
+.tip-label{color:var(--t3);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.tip-d{color:var(--dem2);font-weight:700}
+.tip-r{color:var(--rep2);font-weight:700}
+.tip-bar{height:3px;border-radius:2px;background:var(--s4);overflow:hidden;display:flex;margin-top:10px}
+.tip-bd{background:var(--dem2)}
+.tip-br{background:var(--rep2)}
+
+/* LAYOUT */
+.wrap{max-width:1340px;margin:0 auto;display:grid;grid-template-columns:252px 1fr 268px;min-height:calc(100vh - 56px);border-left:1px solid var(--border);border-right:1px solid var(--border)}
+
+/* LEFT */
+.col-l{border-right:1px solid var(--border);padding:28px 18px;display:flex;flex-direction:column;gap:28px;overflow-y:auto;background:var(--bg)}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--t2);margin-bottom:16px;display:flex;align-items:center;gap:6px}
+.sec-lbl::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--amber)}
+
+/* Senate */
+.senate-dots{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:10px}
+.dot{width:10px;height:10px;border-radius:2px;background:var(--s5);transition:background .4s}
+.dot.d{background:var(--dem-dim)}
+.dot.r{background:var(--rep-dim)}
+.dot.d-new{background:var(--dem2);box-shadow:0 0 4px rgba(29,68,184,.4)}
+.dot.r-new{background:var(--rep2);box-shadow:0 0 4px rgba(163,21,21,.4)}
+.sbar{height:5px;border-radius:3px;background:var(--s4);overflow:hidden;margin:10px 0;position:relative}
+.sbar-d{position:absolute;left:0;top:0;bottom:0;background:var(--dem2);transition:width 1.6s cubic-bezier(.4,0,.2,1)}
+.sbar-r{position:absolute;right:0;top:0;bottom:0;background:var(--rep2);transition:width 1.6s cubic-bezier(.4,0,.2,1)}
+.sbar-mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;transform:translateX(-50%);background:var(--amber);opacity:.8}
+.snums{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;font-weight:700}
+.snums .sd{color:var(--dem2)} .snums .sr{color:var(--rep2)}
+.sneeded{font-size:10px;letter-spacing:.12em;color:var(--t3);text-align:center;margin-top:4px;text-transform:uppercase}
+
+/* Race list */
+.race-item{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s;border-radius:4px}
+.race-item:last-child{border-bottom:none}
+.race-item:hover{background:var(--s2);padding-left:8px;padding-right:8px;margin:0 -8px}
+.ri-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ri-state{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text)}
+.ri-class{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:3px 6px;border-radius:3px}
+.lean-d{background:rgba(29,82,199,.14);color:#1a44b8}
+.lean-r{background:rgba(185,28,28,.14);color:#9a1212}
+.safe-d{background:rgba(29,82,199,.22);color:#1a44b8}
+.tilt-d{background:rgba(196,125,0,.14);color:var(--amber)}
+.ri-bar{height:3px;border-radius:2px;background:var(--s4);overflow:hidden;margin-bottom:6px;display:flex}
+.ri-bd{background:var(--dem2);transition:width 1s ease}
+.ri-br{background:var(--rep2);transition:width 1s ease}
+.ri-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--t3);font-weight:500}
+
+/* Needle */
+.ndl-wrap{text-align:center}
+.ndl-lbl{font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--t2);margin-bottom:8px}
+.ndl-svg{width:100%;max-width:196px}
+.ndl-val{font-family:var(--mono);font-size:11px;color:var(--t2);margin-top:6px;font-weight:600}
+
+/* CENTER */
+.col-c{padding:28px 24px;display:flex;flex-direction:column;gap:18px;background:var(--bg)}
+.center-hdr{display:flex;justify-content:space-between;align-items:baseline}
+.center-title{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--t2)}
+.center-sub{font-family:var(--mono);font-size:10px;color:var(--t3)}
+
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1}
+.sc{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .25s,transform .25s,box-shadow .25s;display:flex;flex-direction:column;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.sc:hover{border-color:var(--amber);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.1)}
+.sc-glow{display:none}
+.sc-top{padding:14px 16px 11px;border-bottom:1px solid var(--border)}
+.sc-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.sc-state{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--text)}
+.sc-race{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:500}
+.sc-map{flex:1;min-height:140px;background:var(--s2);position:relative;overflow:hidden}
+.sc-map svg{position:absolute;inset:0;width:100%;height:100%}
+.map-ld{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3)}
+.sc-bottom{padding:13px 16px;border-top:1px solid var(--border)}
+.sc-cands{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.sc-cand{display:flex;flex-direction:column;gap:2px}
+.sc-cname{font-size:10px;color:var(--t2);font-weight:600;letter-spacing:.04em}
+.sc-pct{font-family:var(--mono);font-size:15px;font-weight:700}
+.sc-pct.d{color:var(--dem2)} .sc-pct.r{color:var(--rep2)}
+.sc-votes{font-family:var(--mono);font-size:10px;color:var(--t3)}
+.sc-lead{text-align:center;font-family:var(--mono);font-size:10px;color:var(--t2)}
+.sc-lead b{color:var(--text);font-weight:700}
+.mbar{height:4px;border-radius:2px;background:var(--s4);overflow:hidden;margin-bottom:9px;display:flex}
+.mbar-d{background:var(--dem2);transition:width 1.5s ease}
+.mbar-r{background:var(--rep2);transition:width 1.5s ease}
+.rpt-row{display:flex;justify-content:space-between;align-items:center}
+.rpt-pct{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.rpt-pct em{font-style:normal;color:var(--text);font-weight:700}
+.rpt-bar{flex:1;height:3px;background:var(--s4);border-radius:2px;margin:0 8px;overflow:hidden}
+.rpt-fill{height:100%;background:var(--amber);opacity:.8;transition:width 1.5s ease}
+.ctag{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 6px;border-radius:3px}
+
+/* ===== RIGHT — FEED ===== */
+.col-r{border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg)}
+.feed-hdr{padding:20px 20px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.feed-title{font-size:10px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--t2)}
+.feed-ct{font-family:var(--mono);font-size:10px;color:var(--amber)}
+.feed-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--s4) transparent}
+.fi{padding:15px 20px;border-bottom:1px solid var(--border);opacity:0;animation:fadeup .5s ease forwards}
+.fi:last-child{border-bottom:none}
+@keyframes fadeup{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.fi-time{font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:5px;letter-spacing:.08em;font-weight:600}
+.fi-text{font-size:12px;line-height:1.6;color:var(--t2)}
+.fi-text strong{color:var(--text);font-weight:700}
+.ftag{display:inline-block;margin-top:6px;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;border-radius:3px;background:var(--s3);color:var(--t2)}
+.ftag.proj{background:rgba(196,125,0,.14);color:var(--amber)}
+.ftag.dem{background:rgba(29,68,184,.12);color:#1a44b8}
+.ftag.rep{background:rgba(163,21,21,.12);color:#9a1212}
+
+/* ===== LIVE BLOG ===== */
+.blog-layout{display:grid;grid-template-columns:1fr 340px;gap:20px}
+.blog-main{}
+.blog-sidebar{}
+.blog-post{background:#fff;border:1px solid var(--border);border-radius:10px;padding:22px 26px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.05);position:relative;overflow:hidden;animation:fadeup .4s ease forwards}
+.blog-post::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.blog-post.breaking::before{background:var(--amber)}
+.blog-post.dem-post::before{background:var(--dem2)}
+.blog-post.rep-post::before{background:var(--rep2)}
+.blog-post.neutral::before{background:var(--s4)}
+.bp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.bp-time{font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:600;letter-spacing:.08em}
+.bp-tag{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:3px 8px;border-radius:3px}
+.bp-tag.breaking{background:rgba(196,125,0,.18);color:var(--amber)}
+.bp-tag.dem{background:rgba(29,68,184,.12);color:#1a44b8}
+.bp-tag.rep{background:rgba(163,21,21,.12);color:#9a1212}
+.bp-tag.analysis{background:var(--s2);color:var(--t2)}
+.bp-tag.projection{background:#111;color:#fff}
+.bp-headline{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;letter-spacing:-.01em}
+.bp-body{font-size:12.5px;color:var(--t2);line-height:1.7}
+.bp-body strong{color:var(--text);font-weight:700}
+.bp-author{margin-top:12px;font-size:11px;color:var(--t3);display:flex;align-items:center;gap:8px}
+.bp-author-dot{width:20px;height:20px;border-radius:50%;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--t2)}
+
+.blog-pinned{background:#fff;border:1px solid var(--amber);border-radius:10px;padding:18px;margin-bottom:16px;box-shadow:0 2px 12px rgba(196,125,0,.12)}
+.bp-pin-lbl{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.bp-pin-lbl::before{content:'📌';font-size:11px}
+.bp-pin-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+.bp-pin-body{font-size:11.5px;color:var(--t2);line-height:1.6}
+
+.blog-sidebar-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.bsc-title{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--t2);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.bsc-title::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--amber)}
+.bsc-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.bsc-stat:last-child{border-bottom:none}
+.bsc-stat-lbl{font-size:11px;color:var(--t2);font-weight:600}
+.bsc-stat-val{font-family:var(--mono);font-size:12px;font-weight:700}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .35s;overflow-y:auto}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal{max-width:1060px;margin:0 auto;background:#fff;min-height:100vh;border-left:1px solid var(--border);border-right:1px solid var(--border);transform:translateY(20px);transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.modal-ov.open .modal{transform:translateY(0)}
+.m-hdr{padding:24px 36px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;background:#fff}
+.m-back{background:none;border:1px solid var(--border2);color:var(--t2);cursor:pointer;font-family:var(--sora);font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;padding:8px 16px;border-radius:5px;transition:color .2s,border-color .2s}
+.m-back:hover{color:var(--text);border-color:var(--t2)}
+.m-state{font-size:11px;font-weight:800;letter-spacing:.32em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+.m-race{font-size:30px;font-weight:800;line-height:1;margin-bottom:16px;letter-spacing:-.02em;color:var(--text)}
+.m-cands{display:flex;gap:36px;align-items:flex-end}
+.m-cand{display:flex;flex-direction:column;gap:3px}
+.m-party{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.m-cname{font-size:18px;font-weight:700;color:var(--text)}
+.m-cpct{font-family:var(--mono);font-size:28px;font-weight:700}
+.m-cpct.d{color:var(--dem2)} .m-cpct.r{color:var(--rep2)}
+.m-cvotes{font-family:var(--mono);font-size:11px;color:var(--t3)}
+.m-vs{font-size:22px;font-weight:300;color:var(--t3);align-self:center}
+.m-margin{padding:20px 36px;border-bottom:1px solid var(--border);background:#fff}
+.m-mlbl{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.m-mbar{height:8px;border-radius:4px;background:var(--s3);overflow:hidden;display:flex;margin-bottom:7px}
+.m-mbd{background:var(--dem2);transition:width 1.5s ease}
+.m-mbr{background:var(--rep2);transition:width 1.5s ease}
+.m-mmeta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t3);font-weight:600}
+.m-map-sec{padding:24px 36px;border-bottom:1px solid var(--border);background:#fff}
+.m-sec-lbl{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--t2);margin-bottom:14px}
+.m-map-box{width:100%;height:400px;background:var(--s2);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative}
+.m-map-box svg{width:100%;height:100%}
+.m-tbl-sec{padding:24px 36px 36px;background:#fff}
+.ctbl{width:100%;border-collapse:collapse;font-size:11px}
+.ctbl th{text-align:left;padding:8px 10px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600;border-bottom:2px solid var(--border)}
+.ctbl td{padding:10px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10.5px;color:var(--t2)}
+.ctbl tr:hover td{background:var(--s1)}
+.td-cn{font-family:var(--sora);font-size:11.5px;font-weight:600;color:var(--text)}
+.td-d{color:var(--dem2);font-weight:700} .td-r{color:var(--rep2);font-weight:700}
+.tm-pos{color:#1a44b8;font-weight:700} .tm-neg{color:#9a1212;font-weight:700} .tm-sw{color:var(--amber);font-weight:700}
+.td-rpt{color:var(--t2)}
+
+/* RESPONSIVE */
+@media(max-width:1060px){.wrap{grid-template-columns:220px 1fr}.col-r{display:none}}
+@media(max-width:780px){.wrap{grid-template-columns:1fr}.col-l{display:none}.sgrid{grid-template-columns:1fr}.hdr-nav{display:none}}
+</style>
+</head>
+<body>
+
+<div class="screen-dimmer" id="dimmer"></div>
+
+<header class="hdr">
+  <div style="display:flex;align-items:center;gap:14px;white-space:nowrap">
+    <div class="cbs-logo">
+      <img class="cbs-logo-img" src="https://logos-world.net/wp-content/uploads/2020/08/CBS-Logo.png" alt="CBS" onerror="this.style.display='none';document.getElementById('cbs-fallback').style.display='flex'">
+      <div id="cbs-fallback" style="display:none;align-items:center;gap:4px">
+        <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="5"/>
+          <path d="M 8,50 Q 20,28 50,28 Q 80,28 92,50 Q 80,72 50,72 Q 20,72 8,50 Z" stroke="currentColor" stroke-width="4.5" fill="none"/>
+          <circle cx="50" cy="50" r="13" fill="currentColor"/>
+          <circle cx="50" cy="50" r="6" fill="var(--bg)"/>
+        </svg>
+        <span style="font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--t3)">CBS</span>
+      </div>
+    </div>
+    <div style="width:1px;height:18px;background:var(--border2)"></div>
+    <div class="hdr-logo">ELECTION <em>DESK</em> <span>'94</span></div>
+  </div>
+  <nav class="hdr-nav">
+    <a id="tab-home" onclick="switchTab('home')" class="active">Home</a>
+    <a id="tab-senate" onclick="switchTab('senate')">Senate</a>
+    <a id="tab-governor" onclick="switchTab('governor')">Governor</a>
+    <a id="tab-president" onclick="switchTab('president')">President</a>
+    <a id="tab-blog" onclick="switchTab('blog')">Live Blog</a>
+  </nav>
+  <div class="hdr-right">
+    <div class="live-dot"></div>
+    <span class="live-lbl">LIVE</span>
+    <span id="clk">--:-- EST</span>
+    <button class="dimmer-btn" id="dimmer-btn" onclick="toggleDimmer()">☽ Dim</button>
+  </div>
+</header>
+<div class="aline"></div>
+
+<div class="banner" id="banner">
+  <div class="banner-eyebrow">CBS NEWS PROJECTS</div>
+  <div class="banner-name" id="banner-txt">California — Democrat</div>
+  <button class="banner-close" onclick="closeBanner()">×</button>
+</div>
+
+<div class="tip" id="tip">
+  <div class="tip-name" id="tip-name">—</div>
+  <div class="tip-row"><span class="tip-label">Reporting</span><span id="tip-rpt" style="color:var(--t2)">—</span></div>
+  <div class="tip-row"><span class="tip-label">Democrat</span><span class="tip-d" id="tip-d">—</span></div>
+  <div class="tip-row"><span class="tip-label">Republican</span><span class="tip-r" id="tip-r">—</span></div>
+  <div class="tip-row"><span class="tip-label">Margin</span><span id="tip-mrg" style="font-weight:700">—</span></div>
+  <div class="tip-bar"><div class="tip-bd" id="tip-bd" style="width:50%"></div><div class="tip-br" id="tip-br" style="width:50%"></div></div>
+</div>
+
+<div class="wrap">
+  <aside class="col-l">
+    <div>
+      <div class="sec-lbl">Senate Control</div>
+      <div class="senate-dots" id="sdots"></div>
+      <div class="sbar"><div class="sbar-d" id="sbar-d" style="width:47%"></div><div class="sbar-r" id="sbar-r" style="width:48%"></div><div class="sbar-mid"></div></div>
+      <div class="snums"><span class="sd"><span id="dseat">47</span> D</span><span style="color:var(--t3);font-size:8.5px;font-family:var(--mono)">NEED 51</span><span class="sr">R <span id="rseat">48</span></span></div>
+      <div class="sneeded">5 races uncalled</div>
+    </div>
+    <div class="aline"></div>
+    <div>
+      <div class="sec-lbl">Key Races</div>
+      <div id="race-list"></div>
+    </div>
+    <div class="aline"></div>
+    <div>
+      <div class="sec-lbl">Governor Outlook</div>
+      <div class="ndl-wrap">
+        <div class="ndl-lbl">Dem Advantage</div>
+        <svg class="ndl-svg" id="ndl" viewBox="0 0 200 108"></svg>
+        <div class="ndl-val" id="ndl-val">Lean Democratic</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="col-c">
+
+    <!-- HOME VIEW -->
+    <div class="view-panel active" id="view-home">
+      <div class="home-hero">
+        <div class="hero-date">November 8, 1994 — Election Night</div>
+        <div class="hero-title">ELECTION NIGHT '94</div>
+        <div class="hero-sub">CBS News live coverage · Results updating in real time</div>
+        <div class="hero-stats">
+          <div class="hstat">
+            <div class="hstat-lbl">Senate — Dem</div>
+            <div class="hstat-val d">47</div>
+            <div class="hstat-note">+3 from prev. session</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-lbl">Senate — Rep</div>
+            <div class="hstat-val r">48</div>
+            <div class="hstat-note">5 races uncalled</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-lbl">Electoral Votes — D</div>
+            <div class="hstat-val d">247</div>
+            <div class="hstat-note">Need 270 to win</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-lbl">States Called</div>
+            <div class="hstat-val a">34</div>
+            <div class="hstat-note">of 50 total states</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-grid">
+        <!-- Senate control -->
+        <div class="ctrl-card" onclick="switchTab('senate')">
+          <div class="ctrl-icon d">U.S. SENATE</div>
+          <div class="ctrl-body">
+            <div>
+              <div class="ctrl-label">Senate Control</div>
+              <div class="ctrl-sub">47 D · 48 R · 5 TBD</div>
+            </div>
+            <div class="ctrl-num r">48</div>
+          </div>
+          <div class="ctrl-bar" style="margin-top:14px">
+            <div class="ctrl-bar-d" style="width:47%"></div>
+            <div class="ctrl-bar-r" style="width:48%"></div>
+          </div>
+          <div class="ctrl-threshold">Need 51 seats for majority</div>
+        </div>
+        <!-- Governor -->
+        <div class="ctrl-card" onclick="switchTab('governor')">
+          <div class="ctrl-icon a">GOVERNOR</div>
+          <div class="ctrl-body">
+            <div>
+              <div class="ctrl-label">4 Key Races</div>
+              <div class="ctrl-sub">2 Dem leading · 2 Rep leading</div>
+            </div>
+            <div class="ctrl-num a">4</div>
+          </div>
+          <div class="ctrl-bar" style="margin-top:14px">
+            <div class="ctrl-bar-d" style="width:55%"></div>
+            <div class="ctrl-bar-r" style="width:45%"></div>
+          </div>
+          <div class="ctrl-threshold">CA, CO (D) · FL, GA (R)</div>
+        </div>
+        <!-- President -->
+        <div class="ctrl-card" onclick="switchTab('president')">
+          <div class="ctrl-icon d">PRESIDENT</div>
+          <div class="ctrl-body">
+            <div>
+              <div class="ctrl-label">Electoral College</div>
+              <div class="ctrl-sub">Chen 247 · Vance 218</div>
+            </div>
+            <div class="ctrl-num d">247</div>
+          </div>
+          <div class="ctrl-bar" style="margin-top:14px">
+            <div class="ctrl-bar-d" style="width:53%"></div>
+            <div class="ctrl-bar-r" style="width:47%"></div>
+          </div>
+          <div class="ctrl-threshold">270 needed · 73 EV uncalled</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <!-- Key race snapshot -->
+        <div class="home-card">
+          <div class="home-section-lbl">Key Race Snapshot</div>
+          <div id="key-race-snapshot"></div>
+        </div>
+        <!-- Latest projections -->
+        <div class="proj-ticker">
+          <div class="home-section-lbl">CBS News Projections</div>
+          <div id="proj-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOVERNOR VIEW -->
+    <div class="view-panel" id="view-governor">
+      <div class="center-hdr">
+        <div class="center-title">Governor Races — 4 Key States</div>
+        <div class="center-sub" id="cts">—</div>
+      </div>
+      <div class="sgrid" id="sgrid"></div>
+    </div>
+
+    <!-- SENATE VIEW -->
+    <div class="view-panel" id="view-senate">
+      <div class="center-hdr">
+        <div class="center-title">Senate Races — Key Contests</div>
+        <div class="center-sub">47 D · 48 R · 5 uncalled</div>
+      </div>
+      <div class="senate-panel-grid" id="senate-grid"></div>
+    </div>
+
+    <!-- PRESIDENT VIEW -->
+    <div class="view-panel" id="view-president">
+      <div class="center-hdr">
+        <div class="center-title">Presidential Race — Electoral College</div>
+        <div class="center-sub" id="cts-pres">—</div>
+      </div>
+      <div class="pres-ec">
+        <div class="pres-ec-card">
+          <div class="pec-party d">Democrat</div>
+          <div class="pec-name">Amara Chen</div>
+          <div class="pec-ev d" id="pec-ev-d">247</div>
+          <div class="pec-sub">electoral votes</div>
+        </div>
+        <div class="pres-ec-card">
+          <div class="pec-party r">Republican</div>
+          <div class="pec-name">Curtis Vance</div>
+          <div class="pec-ev r" id="pec-ev-r">218</div>
+          <div class="pec-sub">electoral votes</div>
+        </div>
+      </div>
+      <div class="pres-ec-bar">
+        <div class="pres-ec-bar-d" id="pec-bar-d" style="width:53%"></div>
+        <div class="pres-ec-bar-r" id="pec-bar-r" style="width:47%"></div>
+      </div>
+      <div class="pres-threshold">270 needed to win · 73 not yet called</div>
+      <div class="pres-national-map" id="nat-map-box">
+        <div class="pres-map-ld" id="nat-map-ld">Loading map…</div>
+        <svg id="nat-map-svg"></svg>
+      </div>
+      <div class="pres-map-legend">
+        <div class="pml-item"><div class="pml-dot" style="background:#1a44b8"></div>Safe D</div>
+        <div class="pml-item"><div class="pml-dot" style="background:#5080e0"></div>Lean D</div>
+        <div class="pml-item"><div class="pml-dot" style="background:#9ab4f4"></div>Tilt D</div>
+        <div class="pml-item"><div class="pml-dot" style="background:#c49830"></div>Toss-up</div>
+        <div class="pml-item"><div class="pml-dot" style="background:#f09898"></div>Tilt R</div>
+        <div class="pml-item"><div class="pml-dot" style="background:#d04040"></div>Lean R</div>
+        <div class="pml-item"><div class="pml-dot" style="background:#8a1010"></div>Safe R</div>
+      </div>
+      <div class="pres-states-lbl">Key State Results</div>
+      <div class="pres-states-grid" id="pres-states"></div>
+    </div>
+
+    <!-- LIVE BLOG VIEW -->
+    <div class="view-panel" id="view-blog">
+      <div class="center-hdr">
+        <div class="center-title">Live Blog — Election Night Coverage</div>
+        <div class="center-sub" id="blog-ts">—</div>
+      </div>
+      <div class="blog-layout">
+        <div class="blog-main" id="blog-main"></div>
+        <div class="blog-sidebar">
+          <div class="blog-sidebar-card">
+            <div class="bsc-title">Tonight's Key Numbers</div>
+            <div class="bsc-stat">
+              <span class="bsc-stat-lbl">States called</span>
+              <span class="bsc-stat-val" style="color:var(--text)">34 / 50</span>
+            </div>
+            <div class="bsc-stat">
+              <span class="bsc-stat-lbl">Chen (D) EV</span>
+              <span class="bsc-stat-val" style="color:var(--dem2)">247</span>
+            </div>
+            <div class="bsc-stat">
+              <span class="bsc-stat-lbl">Vance (R) EV</span>
+              <span class="bsc-stat-val" style="color:var(--rep2)">218</span>
+            </div>
+            <div class="bsc-stat">
+              <span class="bsc-stat-lbl">Senate Dem</span>
+              <span class="bsc-stat-val" style="color:var(--dem2)">47</span>
+            </div>
+            <div class="bsc-stat">
+              <span class="bsc-stat-lbl">Senate Rep</span>
+              <span class="bsc-stat-val" style="color:var(--rep2)">48</span>
+            </div>
+            <div class="bsc-stat">
+              <span class="bsc-stat-lbl">Voter turnout</span>
+              <span class="bsc-stat-val" style="color:var(--amber)">61.3%</span>
+            </div>
+          </div>
+          <div class="blog-sidebar-card">
+            <div class="bsc-title">CBS Correspondents</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--t2)">DN</div>
+                <div><div style="font-size:11px;font-weight:700;color:var(--text)">Dan Norton</div><div style="font-size:10px;color:var(--t3)">Washington Bureau</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--t2)">PV</div>
+                <div><div style="font-size:11px;font-weight:700;color:var(--text)">Patricia Vega</div><div style="font-size:10px;color:var(--t3)">Florida Desk</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--t2)">ML</div>
+                <div><div style="font-size:11px;font-weight:700;color:var(--text)">Marcus Leigh</div><div style="font-size:10px;color:var(--t3)">National Politics</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="blog-sidebar-card">
+            <div class="bsc-title">Still Uncalled</div>
+            <div id="uncalled-list" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <aside class="col-r">
+    <div class="feed-hdr">
+      <div class="feed-title">Live Feed</div>
+      <div class="feed-ct" id="fct">0 UPDATES</div>
+    </div>
+    <div class="feed-list" id="flist"></div>
+  </aside>
+</div>
+
+<div class="modal-ov" id="mov" onclick="closeModalOv(event)">
+  <div class="modal">
+    <div class="m-hdr">
+      <div>
+        <div class="m-state" id="ms-name">FLORIDA</div>
+        <div class="m-race" id="ms-race">GOVERNOR RACE</div>
+        <div class="m-cands">
+          <div class="m-cand"><div class="m-party">Democrat</div><div class="m-cname" id="md-name">—</div><div class="m-cpct d" id="md-pct">—</div><div class="m-cvotes" id="md-votes">—</div></div>
+          <div class="m-vs">vs</div>
+          <div class="m-cand"><div class="m-party">Republican</div><div class="m-cname" id="mr-name">—</div><div class="m-cpct r" id="mr-pct">—</div><div class="m-cvotes" id="mr-votes">—</div></div>
+        </div>
+      </div>
+      <button class="m-back" onclick="closeModal()">← Back</button>
+    </div>
+    <div class="m-margin">
+      <div class="m-mlbl">Vote Margin</div>
+      <div class="m-mbar"><div class="m-mbd" id="mmbd" style="width:50%"></div><div class="m-mbr" id="mmbr" style="width:50%"></div></div>
+      <div class="m-mmeta"><span id="m-mgap">—</span><span id="m-rpt">—</span></div>
+    </div>
+    <div class="m-map-sec">
+      <div class="m-sec-lbl">County Results</div>
+      <div class="m-map-box">
+        <div class="map-ld" id="mml">Loading counties…</div>
+        <svg id="msvg"></svg>
+      </div>
+    </div>
+    <div class="m-tbl-sec">
+      <div class="m-sec-lbl">County Breakdown</div>
+      <table class="ctbl">
+        <thead><tr><th>County</th><th>D%</th><th>R%</th><th>Margin</th><th>Reporting</th></tr></thead>
+        <tbody id="ctbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function sr(n){let x=Math.sin(n*9301+49297)*233280;return x-Math.floor(x)}
+function countyResult(fips,base){
+  const n=parseInt(fips,10);
+  const dp=Math.min(Math.max(base+(sr(n)-.5)*44,16),88);
+  return{dp,rp:100-dp,rpt:Math.floor(52+sr(n+77)*47),tv:Math.floor(4000+sr(n+33)*150000),mg:dp*2-100};
+}
+function cColor(mg){
+  if(Math.abs(mg)<2.5)return'#5e3d00';
+  if(mg>28)return'#0f3490';if(mg>14)return'#1a55c4';if(mg>5)return'#3070d8';
+  if(mg>-5)return'#c03535';if(mg>-14)return'#9a1818';return'#6e0c0c';
+}
+
+function buildDots(){
+  const el=document.getElementById('sdots');
+  for(let i=0;i<100;i++){
+    const d=document.createElement('div');d.className='dot';
+    if(i<47)d.classList.add('d');
+    else if(i<95)d.classList.add('r');
+    else if(i<98)d.classList.add('d-new');
+    else d.classList.add('r-new');
+    el.appendChild(d);
+  }
+}
+
+function buildNeedle(){
+  const svg=document.getElementById('ndl');
+  const cx=100,cy=96,r=78;
+  const ang=Math.PI+Math.PI*.36;
+  const nx=cx+r*.8*Math.cos(ang),ny=cy+r*.8*Math.sin(ang);
+  svg.innerHTML=`
+  <path d="M 22,96 A 78,78 0 0,1 178,96" fill="none" stroke="#d8d7d2" stroke-width="14" stroke-linecap="round"/>
+  <path d="M 22,96 A 78,78 0 0,1 100,18" fill="none" stroke="#1a44b8" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+  <path d="M 100,18 A 78,78 0 0,1 148,31" fill="none" stroke="#3a6de0" stroke-width="14" stroke-linecap="round" opacity=".35"/>
+  <path d="M 148,31 A 78,78 0 0,1 165,62" fill="none" stroke="#b08020" stroke-width="14" stroke-linecap="round" opacity=".45"/>
+  <path d="M 165,62 A 78,78 0 0,1 178,96" fill="none" stroke="#9a1212" stroke-width="14" stroke-linecap="round" opacity=".35"/>
+  <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#c47d00" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="${cx}" cy="${cy}" r="5.5" fill="#c47d00"/>
+  <circle cx="${cx}" cy="${cy}" r="3" fill="#f5f4f0"/>
+  <text x="14" y="112" font-family="Sora" font-size="7" fill="#8a8a88" letter-spacing=".08em">DEM</text>
+  <text x="162" y="112" font-family="Sora" font-size="7" fill="#8a8a88" letter-spacing=".08em">REP</text>
+  <text x="84" y="9" font-family="Sora" font-size="7" fill="#8a8a88" letter-spacing=".08em">EVEN</text>`;
+}
+
+function buildRaceList(){
+  const el=document.getElementById('race-list');
+  Object.entries(STATES).forEach(([k,s])=>{
+    const isR=s.dpct<s.rpct;
+    const mg=Math.abs(s.dpct-s.rpct).toFixed(1);
+    el.innerHTML+=`<div class="race-item" onclick="openModal('${k}')">
+      <div class="ri-header"><span class="ri-state">${s.name}</span><span class="ri-class ${s.cls}">${s.clsl}</span></div>
+      <div class="ri-bar"><div class="ri-bd" style="width:${s.dpct}%"></div><div class="ri-br" style="width:${s.rpct}%"></div></div>
+      <div class="ri-meta"><span>${isR?'R':'D'}+${mg}%</span><span>${s.rpt}% RPT</span></div>
+    </div>`;
+  });
+}
+
+function buildFeed(){
+  const el=document.getElementById('flist');
+  FEED.forEach((f,i)=>{
+    const d=document.createElement('div');d.className='fi';d.style.animationDelay=i*.1+'s';
+    d.innerHTML=`<div class="fi-time">${f.t}</div><div class="fi-text">${f.tx}</div>${f.tag?`<div class="ftag ${f.tc}">${f.tag}</div>`:''}`;
+    el.appendChild(d);
+  });
+  document.getElementById('fct').textContent=FEED.length+' UPDATES';
+}
+
+function buildCards(){
+  const grid=document.getElementById('sgrid');
+  Object.entries(STATES).forEach(([k,s])=>{
+    const isR=s.dpct<s.rpct;
+    const mg=Math.abs(s.dpct-s.rpct).toFixed(1);
+    const div=document.createElement('div');div.className='sc';div.id='sc-'+k;div.onclick=()=>openModal(k);
+    div.innerHTML=`<div class="sc-glow"></div>
+      <div class="sc-top">
+        <div class="sc-header"><span class="sc-state">${s.name}</span><span class="ctag ${s.cls}">${s.clsl}</span></div>
+        <div class="sc-race">${s.race}</div>
+      </div>
+      <div class="sc-map" id="sm-${k}"><div class="map-ld">Loading…</div></div>
+      <div class="sc-bottom">
+        <div class="sc-cands">
+          <div class="sc-cand"><div class="sc-cname">${s.dname}</div><div class="sc-pct d">${s.dpct.toFixed(1)}%</div><div class="sc-votes">${s.dvotes.toLocaleString()}</div></div>
+          <div class="sc-lead"><b>${isR?'R':'D'}+${mg}</b><br><span style="font-size:8px;color:var(--t3)">lead</span></div>
+          <div class="sc-cand" style="text-align:right"><div class="sc-cname">${s.rname}</div><div class="sc-pct r">${s.rpct.toFixed(1)}%</div><div class="sc-votes">${s.rvotes.toLocaleString()}</div></div>
+        </div>
+        <div class="mbar"><div class="mbar-d" style="width:${s.dpct}%"></div><div class="mbar-r" style="width:${s.rpct}%"></div></div>
+        <div class="rpt-row"><span class="rpt-pct"><em>${s.rpt}%</em> RPT</span><div class="rpt-bar"><div class="rpt-fill" style="width:${s.rpt}%"></div></div><span class="ctag ${s.cls}" style="font-size:7px">${s.clsl}</span></div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function buildHome(){
+  // Key race snapshot
+  const snap=document.getElementById('key-race-snapshot');
+  const races=window.D.keyRaces;
+  races.forEach(r=>{
+    const isD=r.margin.startsWith('D');
+    snap.innerHTML+=`<div class="krace-item" ${r.key?`onclick="switchTab('governor');openModal('${r.key}')"`:''}>
+      <div class="kri-left">
+        <div class="kri-state">${r.state}</div>
+        <div class="kri-type">${r.type}</div>
+      </div>
+      <div class="kri-right">
+        <div class="kri-margin ${isD?'td-d':'td-r'}">${r.margin}</div>
+        <div class="kri-rpt">${r.rpt}% RPT</div>
+      </div>
+    </div>`;
+  });
+
+  // Projections
+  const pl=document.getElementById('proj-list');
+  PROJECTIONS.forEach(p=>{
+    pl.innerHTML+=`<div class="proj-item">
+      <div class="proj-badge ${p.badge}">${p.badgeTxt}</div>
+      <div>
+        <div class="proj-text">${p.text}</div>
+        <div class="proj-time">${p.time} EST</div>
+      </div>
+    </div>`;
+  });
+}
+
+function buildBlog(){
+  const main=document.getElementById('blog-main');
+  if(main.children.length)return;
+
+  // Pinned post
+  main.innerHTML=`<div class="blog-pinned">
+    <div class="bp-pin-lbl">Pinned Update</div>
+    <div class="bp-pin-title">Election Night '94: What to watch</div>
+    <div class="bp-pin-body">The key races tonight are Florida (Governor), Pennsylvania (Senate), and the presidential electoral college — where <strong>Amara Chen leads 247–218</strong> but still needs 23 more electoral votes. CBS News correspondents are reporting live from all major battlegrounds.</div>
+  </div>`;
+
+  BLOG_POSTS.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className=`blog-post ${p.type}`;
+    div.style.animationDelay=(i*.07)+'s';
+    div.innerHTML=`<div class="bp-header">
+      <div class="bp-time">${p.time} EST</div>
+      <div class="bp-tag ${p.tagCls}">${p.tag}</div>
+    </div>
+    <div class="bp-headline">${p.headline}</div>
+    <div class="bp-body">${p.body}</div>
+    <div class="bp-author">
+      <div class="bp-author-dot">${p.author}</div>
+      <span>${p.authorName} · CBS News</span>
+    </div>`;
+    main.appendChild(div);
+  });
+
+  // Uncalled sidebar
+  const ul=document.getElementById('uncalled-list');
+  UNCALLED.forEach(u=>{
+    const isD=u.margin.startsWith('D');
+    ul.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text)">${u.state}</div>
+        <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">${u.type} · ${u.rpt}% in</div>
+      </div>
+      <div class="${isD?'td-d':'td-r'}" style="font-family:var(--mono);font-size:11px;font-weight:700">${u.margin}</div>
+    </div>`;
+  });
+
+  document.getElementById('blog-ts').textContent='Last updated: 23:24 EST';
+}
+
+// MAP
+let atlas=null;
+
+function stateFeats(sfips){
+  const all=topojson.feature(atlas,atlas.objects.counties);
+  return{type:'FeatureCollection',features:all.features.filter(f=>String(f.id).padStart(5,'0').slice(0,2)===sfips)};
+}
+
+function renderCardMap(k){
+  const s=STATES[k];const box=document.getElementById('sm-'+k);
+  const W=320,H=180;
+  const feats=stateFeats(s.fips);if(!feats.features.length)return;
+  const proj=d3.geoMercator().fitSize([W-12,H-12],feats);
+  const path=d3.geoPath().projection(proj);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.style.cssText='position:absolute;inset:0;width:100%;height:100%';
+  feats.features.forEach(f=>{
+    const fips=String(f.id).padStart(5,'0');
+    const res=countyResult(fips,s.base);
+    const pe=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const d=path(f);if(!d)return;
+    pe.setAttribute('d',d);pe.setAttribute('fill',cColor(res.mg));
+    pe.setAttribute('stroke','#f5f4f0');pe.setAttribute('stroke-width','.35');
+    pe.style.transition='opacity .15s';pe.style.cursor='pointer';
+    pe.addEventListener('mouseenter',e=>{pe.style.opacity='.65';showTip(e,fips,s.base)});
+    pe.addEventListener('mousemove',moveTip);
+    pe.addEventListener('mouseleave',()=>{pe.style.opacity='1';hideTip()});
+    svg.appendChild(pe);
+  });
+  box.innerHTML='';box.appendChild(svg);
+}
+
+function renderModalMap(k){
+  const s=STATES[k];const W=1000,H=390;
+  const feats=stateFeats(s.fips);if(!feats.features.length)return;
+  const proj=d3.geoMercator().fitSize([W-36,H-32],feats);
+  const path=d3.geoPath().projection(proj);
+  const svgEl=document.getElementById('msvg');
+  svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const sv=d3.select('#msvg');sv.selectAll('*').remove();
+  const defs=sv.append('defs');
+  const glow=defs.append('filter').attr('id','cgl');
+  glow.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','b');
+  const m=glow.append('feMerge');m.append('feMergeNode').attr('in','b');m.append('feMergeNode').attr('in','SourceGraphic');
+  const g=sv.append('g').attr('transform','translate(18,16)');
+  feats.features.forEach(f=>{
+    const fips=String(f.id).padStart(5,'0');
+    const res=countyResult(fips,s.base);
+    const isSwing=Math.abs(res.mg)<4;
+    g.append('path').datum(f).attr('d',path).attr('fill',cColor(res.mg))
+      .attr('stroke','#f5f4f0').attr('stroke-width',.55)
+      .attr('filter',isSwing?'url(#cgl)':null)
+      .style('cursor','pointer')
+      .on('mouseenter',function(ev){d3.select(this).attr('opacity',.65);showTip(ev,fips,s.base)})
+      .on('mousemove',moveTip)
+      .on('mouseleave',function(){d3.select(this).attr('opacity',1);hideTip()});
+  });
+  document.getElementById('mml').style.display='none';
+}
+
+async function loadMaps(){
+  try{
+    atlas=await d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
+    Object.keys(STATES).forEach(k=>setTimeout(()=>renderCardMap(k),0));
+  }catch(e){
+    document.querySelectorAll('.map-ld').forEach(el=>el.textContent='MAP UNAVAILABLE');
+  }
+}
+
+function showTip(e,fips,base){
+  const res=countyResult(fips,base);
+  const name=CNAMES[fips]||('County '+fips.slice(2));
+  document.getElementById('tip-name').textContent=name+' County';
+  document.getElementById('tip-rpt').textContent=res.rpt+'%';
+  document.getElementById('tip-d').textContent=res.dp.toFixed(1)+'%';
+  document.getElementById('tip-r').textContent=res.rp.toFixed(1)+'%';
+  const isD=res.mg>0;
+  const mt=document.getElementById('tip-mrg');
+  mt.textContent=(isD?'D+':'R+')+Math.abs(res.mg).toFixed(1);
+  mt.style.color=isD?'#6fb3f7':'#f78080';
+  document.getElementById('tip-bd').style.width=res.dp+'%';
+  document.getElementById('tip-br').style.width=res.rp+'%';
+  moveTip(e);document.getElementById('tip').classList.add('on');
+}
+function moveTip(e){
+  const t=document.getElementById('tip');
+  let x=e.clientX+14,y=e.clientY-10;
+  if(x+200>window.innerWidth)x=e.clientX-214;
+  if(y+160>window.innerHeight)y=e.clientY-170;
+  t.style.left=x+'px';t.style.top=y+'px';
+}
+function hideTip(){document.getElementById('tip').classList.remove('on')}
+
+function openModal(k){
+  const s=STATES[k];
+  const isR=s.dpct<s.rpct;const mg=Math.abs(s.dpct-s.rpct).toFixed(1);
+  const vg=Math.abs(s.dvotes-s.rvotes).toLocaleString();
+  document.getElementById('ms-name').textContent=s.name.toUpperCase();
+  document.getElementById('ms-race').textContent=s.race.toUpperCase();
+  document.getElementById('md-name').textContent=s.dname;
+  document.getElementById('mr-name').textContent=s.rname;
+  document.getElementById('md-pct').textContent=s.dpct.toFixed(1)+'%';
+  document.getElementById('mr-pct').textContent=s.rpct.toFixed(1)+'%';
+  document.getElementById('md-votes').textContent=s.dvotes.toLocaleString()+' votes';
+  document.getElementById('mr-votes').textContent=s.rvotes.toLocaleString()+' votes';
+  document.getElementById('m-mgap').textContent=(isR?'R':'D')+'+'+mg+'% · '+vg+' votes';
+  document.getElementById('m-rpt').textContent=s.rpt+'% Reporting';
+  setTimeout(()=>{document.getElementById('mmbd').style.width=s.dpct+'%';document.getElementById('mmbr').style.width=s.rpct+'%'},120);
+  buildCTable(k);
+  document.getElementById('mov').classList.add('open');document.body.style.overflow='hidden';
+  if(atlas){document.getElementById('mml').style.display='flex';setTimeout(()=>renderModalMap(k),80)}
+}
+function buildCTable(k){
+  const s=STATES[k];
+  const feats=atlas?stateFeats(s.fips).features:[];
+  const tbody=document.getElementById('ctbody');tbody.innerHTML='';
+  const rows=feats.map(f=>{
+    const fips=String(f.id).padStart(5,'0');
+    const name=CNAMES[fips]||'County';
+    return{fips,name,...countyResult(fips,s.base)};
+  }).sort((a,b)=>b.tv-a.tv).slice(0,22);
+  rows.forEach(c=>{
+    const isD=c.mg>0;const isS=Math.abs(c.mg)<3;
+    const mc=isS?'tm-sw':isD?'tm-pos':'tm-neg';
+    const mt=isS?'±'+Math.abs(c.mg).toFixed(1):(isD?'D+':'R+')+Math.abs(c.mg).toFixed(1);
+    tbody.innerHTML+=`<tr><td class="td-cn">${c.name}</td><td class="td-d">${c.dp.toFixed(1)}%</td><td class="td-r">${c.rp.toFixed(1)}%</td><td class="${mc}">${mt}</td><td class="td-rpt">${c.rpt}%</td></tr>`;
+  });
+}
+function closeModalOv(e){if(e.target===document.getElementById('mov'))closeModal()}
+function closeModal(){document.getElementById('mov').classList.remove('open');document.body.style.overflow=''}
+
+function showBanner(txt){document.getElementById('banner-txt').textContent=txt;document.getElementById('banner').classList.add('show')}
+function closeBanner(){document.getElementById('banner').classList.remove('show')}
+
+function tick(){
+  const now=new Date();
+  const h=String(now.getHours()).padStart(2,'0');
+  const mn=String(now.getMinutes()).padStart(2,'0');
+  const ts=`${h}:${mn} EST`;
+  document.getElementById('clk').textContent=ts;
+  document.getElementById('cts').textContent=ts;
+}
+
+function toggleDimmer(){
+  const d=document.getElementById('dimmer');
+  const btn=document.getElementById('dimmer-btn');
+  d.classList.toggle('active');
+  btn.textContent=d.classList.contains('active')?'☀ Claro':'☽ Dim';
+  btn.style.color=d.classList.contains('active')?'var(--amber)':'';
+}function stateColor(mg){
+  if(mg>20)return'#1a44b8';if(mg>10)return'#3464d4';if(mg>3)return'#5080e0';
+  if(mg>0)return'#9ab4f4';if(mg>-3)return'#f4b060';if(mg>-10)return'#f09898';
+  if(mg>-20)return'#d04040';return'#8a1010';
+}
+
+let natMapRendered=false;
+function renderNationalMap(){
+  if(natMapRendered||!atlas)return;
+  natMapRendered=true;
+  const box=document.getElementById('nat-map-box');
+  const W=box.clientWidth||700,H=310;
+  const feats=topojson.feature(atlas,atlas.objects.states);
+  const proj=d3.geoAlbersUsa().fitSize([W-10,H-20],feats);
+  const path=d3.geoPath().projection(proj);
+  const svgEl=document.getElementById('nat-map-svg');
+  svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const sv=d3.select('#nat-map-svg');sv.selectAll('*').remove();
+  const g=sv.append('g').attr('transform','translate(5,10)');
+  const mesh=topojson.mesh(atlas,atlas.objects.states,(a,b)=>a!==b);
+  feats.features.forEach(f=>{
+    const fips=String(f.id).padStart(2,'0');
+    const sr=STATE_RESULTS[fips];
+    const fill=sr?stateColor(sr.mg):'#ccc';
+    const d=path(f);if(!d)return;
+    g.append('path').datum(f).attr('d',d).attr('fill',fill)
+      .attr('stroke','#f5f4f0').attr('stroke-width',1.2)
+      .style('cursor','pointer').style('transition','opacity .15s')
+      .on('mouseenter',function(ev){
+        d3.select(this).attr('opacity',.75);
+        if(!sr)return;
+        const isD=sr.mg>=0;
+        document.getElementById('tip-name').textContent=sr.n;
+        document.getElementById('tip-rpt').textContent=sr.rpt+'%';
+        document.getElementById('tip-d').textContent=(50+sr.mg/2).toFixed(1)+'%';
+        document.getElementById('tip-r').textContent=(50-sr.mg/2).toFixed(1)+'%';
+        const mt=document.getElementById('tip-mrg');
+        mt.textContent=(isD?'D+':'R+')+Math.abs(sr.mg).toFixed(1)+' · '+sr.ev+' EV';
+        mt.style.color=isD?'#1a44b8':'#9a1212';
+        document.getElementById('tip-bd').style.width=(50+sr.mg/2)+'%';
+        document.getElementById('tip-br').style.width=(50-sr.mg/2)+'%';
+        moveTip(ev);document.getElementById('tip').classList.add('on');
+      })
+      .on('mousemove',moveTip)
+      .on('mouseleave',function(){d3.select(this).attr('opacity',1);hideTip()});
+  });
+  g.append('path').datum(mesh).attr('d',path)
+    .attr('fill','none').attr('stroke','#f5f4f0').attr('stroke-width',.8).attr('pointer-events','none');
+  document.getElementById('nat-map-ld').style.display='none';
+}
+
+function buildSenateGrid(){
+  const grid=document.getElementById('senate-grid');
+  if(grid.children.length)return;
+  SENATE.forEach((s,i)=>{
+    const isR=s.dpct<s.rpct;const mg=Math.abs(s.dpct-s.rpct).toFixed(1);
+    const div=document.createElement('div');div.className='senate-race-card';
+    div.style.cursor='pointer';
+    div.onclick=()=>openSenateModal(i);
+    div.innerHTML=`
+      <div class="src-state">${s.state}</div>
+      <div class="src-label">U.S. Senate · ${s.clsl}</div>
+      <div class="src-cands">
+        <div class="src-cand"><div class="src-name">${s.dname}</div><div class="src-pct d">${s.dpct.toFixed(1)}%</div></div>
+        <div class="src-lead"><b>${isR?'R':'D'}+${mg}</b><br><span style="font-size:9px;color:var(--t3)">lead</span></div>
+        <div class="src-cand" style="text-align:right"><div class="src-name">${s.rname}</div><div class="src-pct r">${s.rpct.toFixed(1)}%</div></div>
+      </div>
+      <div class="src-bar"><div class="src-bd" style="width:${s.dpct}%"></div><div class="src-br" style="width:${s.rpct}%"></div></div>
+      <div class="src-meta"><span>${isR?'R':'D'}+${mg}%</span><span>${s.rpt}% RPT</span></div>
+      <div style="margin-top:8px;font-size:9px;color:var(--t3);letter-spacing:.1em;text-align:right">Click for county detail →</div>`;
+    grid.appendChild(div);
+  });
+}
+
+function openSenateModal(idx){
+  const s=SENATE[idx];
+  const isR=s.dpct<s.rpct;
+  const mg=Math.abs(s.dpct-s.rpct).toFixed(1);
+  const vg=Math.abs(s.dvotes-s.rvotes).toLocaleString();
+  document.getElementById('ms-name').textContent=s.state.toUpperCase();
+  document.getElementById('ms-race').textContent='U.S. SENATE RACE';
+  document.getElementById('md-name').textContent=s.dname;
+  document.getElementById('mr-name').textContent=s.rname;
+  document.getElementById('md-pct').textContent=s.dpct.toFixed(1)+'%';
+  document.getElementById('mr-pct').textContent=s.rpct.toFixed(1)+'%';
+  document.getElementById('md-votes').textContent=s.dvotes.toLocaleString()+' votes';
+  document.getElementById('mr-votes').textContent=s.rvotes.toLocaleString()+' votes';
+  document.getElementById('m-mgap').textContent=(isR?'R':'D')+'+'+mg+'% · '+vg+' votes';
+  document.getElementById('m-rpt').textContent=s.rpt+'% Reporting';
+  setTimeout(()=>{
+    document.getElementById('mmbd').style.width=s.dpct+'%';
+    document.getElementById('mmbr').style.width=s.rpct+'%';
+  },120);
+  buildSenateCTable(idx);
+  document.getElementById('mov').classList.add('open');
+  document.body.style.overflow='hidden';
+  if(atlas){
+    document.getElementById('mml').style.display='flex';
+    setTimeout(()=>renderSenateModalMap(idx),80);
+  }
+}
+
+function renderSenateModalMap(idx){
+  const s=SENATE[idx];
+  const W=1000,H=390;
+  const all=topojson.feature(atlas,atlas.objects.counties);
+  const feats={type:'FeatureCollection',features:all.features.filter(f=>String(f.id).padStart(5,'0').slice(0,2)===s.fips)};
+  if(!feats.features.length)return;
+  const proj=d3.geoMercator().fitSize([W-36,H-32],feats);
+  const path=d3.geoPath().projection(proj);
+  const svgEl=document.getElementById('msvg');
+  svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const sv=d3.select('#msvg');sv.selectAll('*').remove();
+  const defs=sv.append('defs');
+  const glow=defs.append('filter').attr('id','cgl');
+  glow.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','b');
+  const m=glow.append('feMerge');m.append('feMergeNode').attr('in','b');m.append('feMergeNode').attr('in','SourceGraphic');
+  const g=sv.append('g').attr('transform','translate(18,16)');
+  feats.features.forEach(f=>{
+    const fips=String(f.id).padStart(5,'0');
+    const res=countyResult(fips,s.base);
+    const isSwing=Math.abs(res.mg)<4;
+    g.append('path').datum(f).attr('d',path).attr('fill',cColor(res.mg))
+      .attr('stroke','#f5f4f0').attr('stroke-width',.55)
+      .attr('filter',isSwing?'url(#cgl)':null)
+      .style('cursor','pointer')
+      .on('mouseenter',function(ev){d3.select(this).attr('opacity',.65);showSenateTip(ev,fips,s.base)})
+      .on('mousemove',moveTip)
+      .on('mouseleave',function(){d3.select(this).attr('opacity',1);hideTip()});
+  });
+  document.getElementById('mml').style.display='none';
+}
+
+function showSenateTip(e,fips,base){
+  const res=countyResult(fips,base);
+  const name=SENATE_CNAMES[fips]||CNAMES[fips]||('County '+fips.slice(2));
+  document.getElementById('tip-name').textContent=name+' County';
+  document.getElementById('tip-rpt').textContent=res.rpt+'%';
+  document.getElementById('tip-d').textContent=res.dp.toFixed(1)+'%';
+  document.getElementById('tip-r').textContent=res.rp.toFixed(1)+'%';
+  const isD=res.mg>0;
+  const mt=document.getElementById('tip-mrg');
+  mt.textContent=(isD?'D+':'R+')+Math.abs(res.mg).toFixed(1);
+  mt.style.color=isD?'#6fb3f7':'#f78080';
+  document.getElementById('tip-bd').style.width=res.dp+'%';
+  document.getElementById('tip-br').style.width=res.rp+'%';
+  moveTip(e);document.getElementById('tip').classList.add('on');
+}
+
+function buildSenateCTable(idx){
+  const s=SENATE[idx];
+  const all=atlas?topojson.feature(atlas,atlas.objects.counties).features:[];
+  const feats=all.filter(f=>String(f.id).padStart(5,'0').slice(0,2)===s.fips);
+  const tbody=document.getElementById('ctbody');tbody.innerHTML='';
+  const rows=feats.map(f=>{
+    const fips=String(f.id).padStart(5,'0');
+    const name=SENATE_CNAMES[fips]||CNAMES[fips]||'County';
+    return{fips,name,...countyResult(fips,s.base)};
+  }).sort((a,b)=>b.tv-a.tv).slice(0,22);
+  rows.forEach(c=>{
+    const isD=c.mg>0;const isS=Math.abs(c.mg)<3;
+    const mc=isS?'tm-sw':isD?'tm-pos':'tm-neg';
+    const mt=isS?'±'+Math.abs(c.mg).toFixed(1):(isD?'D+':'R+')+Math.abs(c.mg).toFixed(1);
+    tbody.innerHTML+=`<tr><td class="td-cn">${c.name}</td><td class="td-d">${c.dp.toFixed(1)}%</td><td class="td-r">${c.rp.toFixed(1)}%</td><td class="${mc}">${mt}</td><td class="td-rpt">${c.rpt}%</td></tr>`;
+  });
+}
+
+function buildPresStates(){
+  const grid=document.getElementById('pres-states');
+  if(grid.children.length)return;
+  PRES_STATES.forEach(s=>{
+    const isR=s.dpct<s.rpct;const mg=Math.abs(s.dpct-s.rpct).toFixed(1);
+    const div=document.createElement('div');div.className='senate-race-card';
+    div.innerHTML=`
+      <div class="src-state">${s.state}</div>
+      <div class="src-label">${s.ev} EV · ${s.rpt}% RPT</div>
+      <div class="src-bar" style="margin-top:8px"><div class="src-bd" style="width:${s.dpct}%"></div><div class="src-br" style="width:${s.rpct}%"></div></div>
+      <div class="src-meta" style="margin-top:6px"><span class="${isR?'td-r':'td-d'}">${isR?'R':'D'}+${mg}%</span><span class="${s.cls}">${s.cls.replace('-',' ').toUpperCase()}</span></div>`;
+    grid.appendChild(div);
+  });
+  document.getElementById('cts-pres').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+' EST';
+}
+
+function switchTab(tab){
+  ['home','senate','governor','president','blog'].forEach(t=>{
+    document.getElementById('view-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='senate')buildSenateGrid();
+  if(tab==='president'){buildPresStates();setTimeout(renderNationalMap,80);}
+  if(tab==='blog')buildBlog();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  fetch('elections-data.json')
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(data=>{
+      window.D            = data;
+      window.STATES       = data.states;
+      window.CNAMES       = data.countyNames;
+      window.SENATE_CNAMES= data.countyNames;
+      window.FEED         = data.feed;
+      window.BLOG_POSTS   = data.blogPosts;
+      window.PROJECTIONS  = data.projections;
+      window.UNCALLED     = data.uncalled;
+      window.SENATE       = data.senate;
+      window.PRES_STATES  = data.presStates;
+      window.STATE_RESULTS= data.stateResults;
+      buildDots();buildNeedle();buildRaceList();buildFeed();buildCards();buildHome();
+      tick();setInterval(tick,30000);
+      loadMaps();
+      setTimeout(()=>showBanner('California \u2192 Democrat \u00b7 Amara Chen projected winner'),3200);
+    })
+    .catch(err=>{
+      document.body.innerHTML='<div style="font-family:monospace;padding:40px;color:#c00">'
+        +'<b>Erro ao carregar dados</b><br>'+err.message
+        +'<br><small>Certifique-se de que elections-data.json está na mesma pasta.</small></div>';
+    });
+});
+</script>
+</body>
+</html>
